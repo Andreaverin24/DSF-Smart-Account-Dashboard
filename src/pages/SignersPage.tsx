@@ -1,9 +1,12 @@
 import { CheckCircle2, Fingerprint, ShieldCheck, UserCheck, UsersRound, XCircle } from 'lucide-react';
 import { useState } from 'react';
+import { SignerSetPanel } from '../components/signers/SignerSetPanel';
+import { ThresholdVisualizer } from '../components/signers/ThresholdVisualizer';
 import { Button } from '../components/ui/Button';
 import { Panel } from '../components/ui/Panel';
 import { StatusBadge } from '../components/ui/Badge';
-import { signerSlots } from '../domain/mockData';
+import { demoSignerSets, signerSlots } from '../domain/mockData';
+import { canExecuteNormalTransaction } from '../domain/signerRequirements';
 
 const iconById = {
   social: UsersRound,
@@ -14,10 +17,31 @@ const iconById = {
 
 export function SignersPage() {
   const [scenarioSigner, setScenarioSigner] = useState<string>('device');
+  const [selectedSignerIds, setSelectedSignerIds] = useState<string[]>([
+    demoSignerSets.deviceSigners[0]!.signerId,
+    demoSignerSets.socialSigners[0]!.signerId,
+  ]);
   const activeSigner = signerSlots.find((signer) => signer.id === scenarioSigner) ?? signerSlots[1]!;
+  const evaluation = canExecuteNormalTransaction(selectedSignerIds, demoSignerSets);
+
+  function toggleSigner(signerId: string) {
+    setSelectedSignerIds((current) =>
+      current.includes(signerId) ? current.filter((selectedSignerId) => selectedSignerId !== signerId) : [...current, signerId],
+    );
+  }
 
   return (
     <div className="space-y-6">
+      <Panel title="Зарегистрированные signer sets" eyebrow="Массивы подписантов">
+        <p className="mb-4 rounded-lg border border-accent-500/30 bg-accent-500/10 p-4 text-sm leading-6">
+          Индекс подписанта — это удобное имя для интерфейса. Контракт идентифицирует подписанта по устойчивому signerId, производному от публичного ключа или адреса.
+        </p>
+        <SignerSetPanel signerSets={demoSignerSets} selectedSignerIds={selectedSignerIds} onToggleSigner={toggleSigner} />
+        <div className="mt-5">
+          <ThresholdVisualizer evaluation={evaluation} />
+        </div>
+      </Panel>
+
       <div className="grid gap-5 xl:grid-cols-2">
         {signerSlots.map((signer) => {
           const Icon = iconById[signer.id as keyof typeof iconById];

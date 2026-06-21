@@ -1,4 +1,5 @@
 import type {
+  SmartAccountSignerSets,
   MatrixRow,
   OperationDraft,
   SecurityScenario,
@@ -25,6 +26,122 @@ export const smartAccount: SmartAccountState = {
   },
   trustedRecipients: ['0xDSFRouter...0420', '0xTrusted...2048'],
 };
+
+export const demoSignerSets: SmartAccountSignerSets = {
+  deviceSigners: [
+    {
+      type: 'DEVICE',
+      signerId: '0xDeviceSigner0A1b2C3d4E5f6',
+      displayIndex: 0,
+      label: 'Основной Android',
+      status: 'ACTIVE',
+      addedAt: '2026-04-02',
+      algorithm: 'P256',
+      publicKeyX: '0x8fe1...42b7',
+      publicKeyY: '0x17ac...09d1',
+      deviceName: 'Pixel 9 Pro',
+      hardwareBacked: true,
+    },
+    {
+      type: 'DEVICE',
+      signerId: '0xDeviceSigner1B2c3D4e5F6a7',
+      displayIndex: 1,
+      label: 'Резервный планшет',
+      status: 'ACTIVE',
+      addedAt: '2026-04-03',
+      algorithm: 'P256',
+      publicKeyX: '0x54aa...19c0',
+      publicKeyY: '0x7b33...e5a4',
+      deviceName: 'Galaxy Tab Secure',
+      hardwareBacked: true,
+    },
+  ],
+  socialSigners: [
+    {
+      type: 'SOCIAL',
+      signerId: '0xSocialSigner0C3d4E5f6A7b8',
+      displayIndex: 0,
+      label: 'Google',
+      status: 'ACTIVE',
+      addedAt: '2026-04-02',
+      provider: 'GOOGLE',
+      socialPublicIdentifier: 'google:dsf-user@example.com',
+      sessionStatus: 'ACTIVE',
+    },
+    {
+      type: 'SOCIAL',
+      signerId: '0xSocialSigner1D4e5F6a7B8c9',
+      displayIndex: 1,
+      label: 'Apple',
+      status: 'ACTIVE',
+      addedAt: '2026-04-02',
+      provider: 'APPLE',
+      socialPublicIdentifier: 'apple:dsf-user@privaterelay.appleid.com',
+      sessionStatus: 'ACTIVE',
+    },
+    {
+      type: 'SOCIAL',
+      signerId: '0xSocialSigner2E5f6A7b8C9d0',
+      displayIndex: 2,
+      label: 'Passkey',
+      status: 'ACTIVE',
+      addedAt: '2026-04-04',
+      provider: 'PASSKEY',
+      socialPublicIdentifier: 'passkey:dsf-user',
+      sessionStatus: 'ACTIVE',
+    },
+  ],
+  arbiterSigners: [
+    {
+      type: 'ARBITER',
+      signerId: '0xArbiterSigner0F6a7B8c9D0e1',
+      displayIndex: 0,
+      label: 'DSF HSM A',
+      status: 'ACTIVE',
+      addedAt: '2026-04-05',
+      address: '0xArbiterA...1001',
+      nodeLabel: 'DSF Arbiter A',
+    },
+    {
+      type: 'ARBITER',
+      signerId: '0xArbiterSigner1A7b8C9d0E1f2',
+      displayIndex: 1,
+      label: 'DSF HSM B',
+      status: 'ACTIVE',
+      addedAt: '2026-04-05',
+      address: '0xArbiterB...1002',
+      nodeLabel: 'DSF Arbiter B',
+    },
+    {
+      type: 'ARBITER',
+      signerId: '0xArbiterSigner2B8c9D0e1F2a3',
+      displayIndex: 2,
+      label: 'DSF HSM C',
+      status: 'ACTIVE',
+      addedAt: '2026-04-05',
+      address: '0xArbiterC...1003',
+      nodeLabel: 'DSF Arbiter C',
+    },
+  ],
+};
+
+export function createRegistrationSignerSets(step: number): SmartAccountSignerSets {
+  return {
+    deviceSigners: demoSignerSets.deviceSigners.map((signer) => ({
+      ...signer,
+      status: step >= 4 ? signer.status : 'NOT_REGISTERED',
+    })),
+    socialSigners: demoSignerSets.socialSigners.map((signer, index) => ({
+      ...signer,
+      status: step >= 3 || (step >= 2 && index === 0) ? signer.status : 'NOT_REGISTERED',
+      sessionStatus: step >= 3 || (step >= 2 && index === 0) ? signer.sessionStatus : 'UNAVAILABLE',
+    })),
+    arbiterSigners: demoSignerSets.arbiterSigners.map((signer) => ({
+      ...signer,
+      status: step >= 7 ? signer.status : 'NOT_REGISTERED',
+    })),
+  };
+}
 
 export const defaultOperationDraft: OperationDraft = {
   type: 'TRANSFER',
@@ -205,7 +322,7 @@ export const authorizationRows: MatrixRow[] = [
     arbiter: 'Обязательно',
     recovery: 'Опционально',
     delay: '48 часов',
-    explanation: 'Старое устройство может быть потеряно, поэтому recovery строится на Social + Arbiter или резервном факторе.',
+    explanation: 'Если потеряны все Device, recovery строится на пороге 2 Social + 1 Arbiter или на отдельном резервном recovery-факторе.',
   },
   {
     operation: 'Upgrade аккаунта',
@@ -260,7 +377,7 @@ export const securityScenarios: SecurityScenario[] = [
     mechanisms: ['multisigner validation', 'context-based policy', 'timelock', 'recovery'],
     outcome: [
       'Arbiter не может единолично вывести средства.',
-      'Arbiter не может единолично заменить Device Signer.',
+      'Arbiter не может единолично заменить записи DeviceSigners[].',
       'Критические операции требуют другие независимые факторы.',
       'Arbiter можно заменить через усиленную процедуру.',
       'Смена Arbiter проходит через timelock.',

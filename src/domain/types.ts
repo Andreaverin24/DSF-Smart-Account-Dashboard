@@ -174,3 +174,148 @@ export interface RecoveryTransitionResult {
   request: RecoveryRequest;
   message: string;
 }
+
+export type SignerLifecycleStatus =
+  | 'NOT_REGISTERED'
+  | 'ACTIVE'
+  | 'SUSPENDED'
+  | 'REPLACEMENT_PENDING'
+  | 'REVOKED';
+
+export type SocialSessionStatus = 'ACTIVE' | 'REFRESHING' | 'AUTH_REQUIRED' | 'REVOKED' | 'UNAVAILABLE';
+
+export type AccountLifecycleStage =
+  | 'INSTALLATION'
+  | 'SOCIAL_AUTH'
+  | 'DEVICE_CREATION'
+  | 'ACCOUNT_CREATION'
+  | 'READY'
+  | 'TRANSACTION'
+  | 'DEVICE_REPLACEMENT'
+  | 'SOCIAL_REPLACEMENT'
+  | 'EMERGENCY_FREEZE'
+  | 'UNFREEZE';
+
+export type TransactionLifecycleStatus =
+  | 'CREATED'
+  | 'WAITING_SOCIAL'
+  | 'SOCIAL_SIGNED'
+  | 'WAITING_BIOMETRIC'
+  | 'DEVICE_SIGNED'
+  | 'SUBMITTED'
+  | 'VALIDATED'
+  | 'EXECUTED'
+  | 'FAILED';
+
+export type ReplacementRequestStatus = 'DRAFT' | 'PENDING' | 'SUSPENDED_OLD' | 'EXECUTED' | 'CANCELLED';
+
+export interface DeviceReplacementRequest {
+  account: string;
+  oldDeviceKeyHash: string;
+  newDeviceKeyHash: string;
+  recoveryNonce: number;
+  validUntil: string;
+  socialApproved: boolean;
+  arbiterApproved: boolean;
+  status: ReplacementRequestStatus;
+}
+
+export interface SocialReplacementRequest {
+  account: string;
+  oldSocialSigner: string;
+  newSocialSigner: string;
+  recoveryNonce: number;
+  validUntil: string;
+  deviceApproved: boolean;
+  arbiterApproved: boolean;
+  newSocialProvedOwnership: boolean;
+  status: ReplacementRequestStatus;
+}
+
+export interface BaseSignerRecord {
+  signerId: string;
+  displayIndex: number;
+  label: string;
+  status: SignerLifecycleStatus;
+  addedAt: string;
+  revokedAt?: string;
+}
+
+export interface DeviceSignerRecord extends BaseSignerRecord {
+  type: 'DEVICE';
+  algorithm: 'P256';
+  publicKeyX: string;
+  publicKeyY: string;
+  deviceName: string;
+  hardwareBacked: boolean;
+}
+
+export interface SocialSignerRecord extends BaseSignerRecord {
+  type: 'SOCIAL';
+  provider: 'GOOGLE' | 'APPLE' | 'PASSKEY' | 'PRIVY' | 'WEB3AUTH' | 'OTHER';
+  socialPublicIdentifier: string;
+  sessionStatus: SocialSessionStatus;
+}
+
+export interface ArbiterSignerRecord extends BaseSignerRecord {
+  type: 'ARBITER';
+  address: string;
+  nodeLabel: string;
+}
+
+export interface SmartAccountSignerSets {
+  deviceSigners: DeviceSignerRecord[];
+  socialSigners: SocialSignerRecord[];
+  arbiterSigners: ArbiterSignerRecord[];
+}
+
+export interface SignerRequirement {
+  deviceThreshold: number;
+  socialThreshold: number;
+  arbiterThreshold: number;
+}
+
+export interface RequirementEvaluation {
+  requirement: SignerRequirement;
+  selected: SignerRequirement;
+  validSignerIds: string[];
+  ignoredSignerIds: string[];
+  fulfilled: boolean;
+  missing: string[];
+  explanation: string;
+}
+
+export interface AccountLifecycleRegistrationState {
+  step: number;
+  signerSets: SmartAccountSignerSets;
+  smartAccountReady: boolean;
+  signerEpoch: number;
+  accountStatus: 'NOT_CREATED' | 'ACTIVE' | 'FROZEN';
+}
+
+export interface DeviceReplacementState {
+  request: DeviceReplacementRequest;
+  oldDeviceStatus: SignerLifecycleStatus;
+  newDeviceStatus: SignerLifecycleStatus;
+  signerEpochBefore: number;
+  signerEpochAfter: number;
+  sessionKeysRevoked: boolean;
+}
+
+export interface SocialReplacementState {
+  request: SocialReplacementRequest;
+  oldSocialStatus: SignerLifecycleStatus;
+  newSocialStatus: SignerLifecycleStatus;
+  signerEpochBefore: number;
+  signerEpochAfter: number;
+  recoveryNonceBefore: number;
+  recoveryNonceAfter: number;
+}
+
+export interface EmergencyFreezeState {
+  accountStatus: 'ACTIVE' | 'FROZEN';
+  arbiterRequested: boolean;
+  signersRestored: boolean;
+  deviceApprovedUnfreeze: boolean;
+  socialApprovedUnfreeze: boolean;
+}

@@ -10,7 +10,7 @@ export function Tooltip({ label, children }: { label: string; children?: ReactNo
       </button>
       <span
         role="tooltip"
-        className="pointer-events-none absolute bottom-full left-1/2 z-30 mb-2 w-64 -translate-x-1/2 rounded-md border border-white/10 bg-surface-850 p-3 text-xs leading-relaxed text-slate-100 opacity-0 shadow-panel transition group-hover:opacity-100 group-focus-within:opacity-100"
+        className="pointer-events-none absolute bottom-full left-0 z-30 mb-2 w-64 max-w-[calc(100vw-2rem)] rounded-md border border-white/10 bg-surface-850 p-3 text-xs leading-relaxed text-slate-100 opacity-0 shadow-panel transition group-hover:opacity-100 group-focus-within:opacity-100 sm:left-1/2 sm:-translate-x-1/2"
       >
         {label}
       </span>

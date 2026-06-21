@@ -190,6 +190,10 @@ textarea:focus-visible,
   outline-offset: 3px;
 }
 
+.group:not(:hover):not(:focus-within) [role='tooltip'] {
+  display: none;
+}
+
 .panel {
   @apply rounded-lg border border-white/10 bg-surface-900/90 shadow-panel;
 }
@@ -219,7 +223,13 @@ textarea:focus-visible,
 }
 
 .code-block {
-  @apply overflow-x-auto rounded-lg border border-white/10 bg-black/40 p-4 font-mono text-xs leading-relaxed text-slate-100;
+  @apply max-w-full overflow-auto whitespace-pre-wrap break-words rounded-lg border border-white/10 bg-black/40 p-4 font-mono text-xs leading-relaxed text-slate-100;
+}
+
+.code-block code {
+  display: block;
+  min-width: 100%;
+  width: auto;
 }
 
 :root:not(.dark) .code-block {
